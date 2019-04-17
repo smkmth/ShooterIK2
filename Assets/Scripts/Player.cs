@@ -6,6 +6,8 @@ public class Player : MonoBehaviour
 {
 
     public GameObject MainArmIK;
+    public Animator PlayerAnim;
+
     Vector3 flip = new Vector3(-1, 1, 1);
     public bool facingRight = true;
 
@@ -34,7 +36,13 @@ public class Player : MonoBehaviour
         float inputLR = Input.GetAxis("Horizontal");
         if (inputLR != 0)
         {
+            PlayerAnim.SetBool("Walking", true);
             transform.position += Vector3.right * inputLR * Time.deltaTime ;
+        }
+        else
+        {
+            PlayerAnim.SetBool("Walking", false);
+
         }
 
     }
