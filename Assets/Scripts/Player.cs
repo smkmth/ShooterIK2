@@ -35,16 +35,17 @@ public class Player : MonoBehaviour
     private LayerMask WeaponHit;
 
     private CapsuleCollider playerCollider;
-    private SphereCollider offArmCollider;
     private Rigidbody playerRb;
     private DDOL gameManager;
 
     [HideInInspector]
     public bool Grounded;
+
+    public bool NearLedge;
     [HideInInspector]
     public bool facingRight = true;
     [HideInInspector]
-    public bool running = false;
+    public bool walking = false;
 
     private Vector3 flip = new Vector3(-.1f, .1f, .1f);
     private Vector3 notflipped = new Vector3(.1f, .1f, .1f);
@@ -67,7 +68,7 @@ public class Player : MonoBehaviour
     {
 
         Grounded = Physics.CheckCapsule(playerCollider.bounds.center, new Vector3(playerCollider.bounds.center.x, playerCollider.bounds.min.y, playerCollider.bounds.center.z), 0.01f, Ground);
-
+        NearLedge = Physics.CheckSphere(transform.position, 1f ,LayerMask.NameToLayer("Corner"));
         if (Grounded)
         { 
 
@@ -80,7 +81,7 @@ public class Player : MonoBehaviour
             runSpeed = airspeed;
         }
         PlayerAnim.SetBool("Grounded", Grounded);
-        running = Input.GetButton("Run");
+        walking = Input.GetButton("Run");
      
         //facing and aiming
         if (Input.mousePosition.x < (Screen.width / 2))
@@ -110,7 +111,10 @@ public class Player : MonoBehaviour
                 Debug.DrawRay(gun.transform.position, dir * 1000.0f, Color.yellow, 1.0f);
                 if (hit.transform != null)
                 {
-                    Debug.Log("Hit");
+                    if (hit.transform.gameObject.GetComponent<Enemy>())
+                    {
+                        hit.transform.gameObject.GetComponent<Enemy>().Health -= 10;
+                    }
                 }
                 timer = fireDelay;
 
@@ -156,24 +160,24 @@ public class Player : MonoBehaviour
         float inputLR = Input.GetAxis("Horizontal");
         if (inputLR != 0 )
         {
-            if (running)
+            if (walking)
             {
 
-                PlayerAnim.SetBool("Walking", false);
-                PlayerAnim.SetBool("Running", true);
-                if (playerRb.velocity.magnitude < maxSpeed)
-                {
-                    playerRb.AddForce(Vector3.right * inputLR * Time.deltaTime * runSpeed, ForceMode.Impulse);
-                }
-
-            }
-            else
-            {
                 PlayerAnim.SetBool("Walking", true);
                 PlayerAnim.SetBool("Running", false);
                 if (playerRb.velocity.magnitude < maxSpeed)
                 {
                     playerRb.AddForce(Vector3.right * inputLR * Time.deltaTime * walkSpeed, ForceMode.Impulse);
+                }
+
+            }
+            else
+            {
+                PlayerAnim.SetBool("Walking", false);
+                PlayerAnim.SetBool("Running", true);
+                if (playerRb.velocity.magnitude < maxSpeed)
+                {
+                    playerRb.AddForce(Vector3.right * inputLR * Time.deltaTime * runSpeed, ForceMode.Impulse);
                 }
             }
 
@@ -225,8 +229,6 @@ public class Player : MonoBehaviour
         if (onLedge)
         {
             onLedge = false;
-
-            Debug.Log(hit.gameObject.name + "Left");
             playerRb.useGravity = true;
 
         }
