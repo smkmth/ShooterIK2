@@ -2,42 +2,63 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(CapsuleCollider),typeof(Rigidbody))]
 public class Player : MonoBehaviour
 {
 
     public GameObject MainArmIK;
-    public Animator PlayerAnim;
+    public GameObject gun;
 
-    public Vector3 flip = new Vector3(-.1f, .1f, .1f);
-    public Vector3 notflipped = new Vector3(.1f, .1f, .1f);
-    public bool facingRight = true;
-    public bool running = false;
+    public Animator PlayerAnim;
 
     public float BaseWalkSpeed;
     private float walkSpeed;
     public float BaseRunSpeed;
     private float runSpeed;
     public float jumpHeight;
+    public float wallJumpHeight;
+    private Vector3 wallJumpVector;
     public float airspeed;
+    public float maxSpeed;
+
     public float grounddrag;
     public float airdrag;
 
-    public float maxSpeed;
+    public float fireDelay;
+    private float timer;
+
+    public bool touchingWall = false;
+    public bool onLedge = false;
 
 
-    public bool Grounded;
-    public LayerMask Ground; 
-    public LayerMask WeaponHit;
-    public GameObject gun;
+    private LayerMask Ground; 
+    private LayerMask WeaponHit;
 
     private CapsuleCollider playerCollider;
+    private SphereCollider offArmCollider;
     private Rigidbody playerRb;
+    private DDOL gameManager;
+
+    [HideInInspector]
+    public bool Grounded;
+    [HideInInspector]
+    public bool facingRight = true;
+    [HideInInspector]
+    public bool running = false;
+
+    private Vector3 flip = new Vector3(-.1f, .1f, .1f);
+    private Vector3 notflipped = new Vector3(.1f, .1f, .1f);
 
     // Start is called before the first frame update
     void Start()
     {
         playerCollider = GetComponent<CapsuleCollider>();
         playerRb = GetComponent<Rigidbody>();
+        gameManager = GetComponentInParent<DDOL>();
+
+
+        Ground = gameManager.whatIsGround;
+        WeaponHit = gameManager.whatIsEnemy;
         playerRb.drag = grounddrag;
     }
 
@@ -48,21 +69,15 @@ public class Player : MonoBehaviour
         Grounded = Physics.CheckCapsule(playerCollider.bounds.center, new Vector3(playerCollider.bounds.center.x, playerCollider.bounds.min.y, playerCollider.bounds.center.z), 0.01f, Ground);
 
         if (Grounded)
-        {
-            playerRb.drag = grounddrag;
-            playerRb.mass = 1.0f;
+        { 
+
             walkSpeed = BaseWalkSpeed;
             runSpeed = BaseRunSpeed;
-            
-            
         }
         else
         {
             walkSpeed = airspeed;
             runSpeed = airspeed;
-            playerRb.drag = airdrag;
-            playerRb.mass = 50.0f;
-
         }
         PlayerAnim.SetBool("Grounded", Grounded);
         running = Input.GetButton("Run");
@@ -83,23 +98,54 @@ public class Player : MonoBehaviour
         pos.z = 0;
         MainArmIK.transform.position = pos;
 
-        if (Input.GetMouseButton(0))
+        Vector3 dir = Input.mousePosition - Camera.main.WorldToScreenPoint(gun.transform.position);
+
+        if (timer <= 0.0f)
         {
-            RaycastHit hit;
-            
-            Physics.Raycast(gun.transform.position, pos, out hit, 100.0f, WeaponHit);
-            Debug.DrawRay(gun.transform.position, pos, Color.yellow, 10.0f);
-            if (hit.transform != null)
+            if (Input.GetMouseButtonDown(0))
             {
-                Debug.Log("Hit");
+                RaycastHit hit;
+
+                Physics.Raycast(gun.transform.position, dir, out hit, 1000.0f, WeaponHit);
+                Debug.DrawRay(gun.transform.position, dir * 1000.0f, Color.yellow, 1.0f);
+                if (hit.transform != null)
+                {
+                    Debug.Log("Hit");
+                }
+                timer = fireDelay;
+
             }
-            
-           
-           
+        }
+        else
+        {
+            timer -= Time.deltaTime;
+        }
+
+        //jumping
+        if (Input.GetButtonDown("Jump") && Grounded)
+        {
+            Vector3 jump = new Vector3(1, 1, 0);
+
+            playerRb.AddForce(Vector3.up * jumpHeight, ForceMode.Impulse);
 
         }
 
+        if (Input.GetButtonDown("Jump") && touchingWall)
+        {
+            if (!onLedge)
+            {
+                wallJumpVector.y = (jumpHeight / 2);
+                Debug.Log(wallJumpVector * wallJumpHeight);
 
+                playerRb.AddForce(wallJumpVector * wallJumpHeight, ForceMode.Impulse);
+                Debug.Log("walljump");
+            }
+            else
+            {
+                playerRb.AddForce(new Vector3(0.0f, 6.0f, 0),ForceMode.Impulse);
+
+            }
+        }
     }
 
     private void FixedUpdate()
@@ -138,12 +184,50 @@ public class Player : MonoBehaviour
             PlayerAnim.SetBool("Walking", false);
 
         }
-        //jumping
-        if (Input.GetButtonDown("Jump") && Grounded)
+    
+
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (!Grounded)
         {
-            Vector3 jump = new Vector3(0, 1, 0);
-            Debug.Log("jump");
-            playerRb.AddForce(jump * jumpHeight, ForceMode.Impulse);
+            if (collision.GetContact(0).normal.x > 0.9 || collision.GetContact(0).normal.x < -0.9)
+            {
+                Debug.Log("Hit corner");
+                touchingWall = true;
+                Debug.DrawRay(collision.GetContact(0).point, collision.GetContact(0).normal, Color.red, 10.0f);
+
+                wallJumpVector = collision.GetContact(0).normal;
+            }
+        }
+        
+    }
+    private void OnCollisionExit(Collision collision)
+    {
+        touchingWall = false;
+
+
+    }
+
+    public void OffArmColliderHit(Collider hit)
+    {
+      
+        Debug.Log(hit.gameObject.name + "Hit");
+        playerRb.useGravity = false;
+        onLedge = true;
+
+       // playerRb.AddForce(new Vector3(0.0f, 6.0f, 0),ForceMode.Impulse);
+
+    }
+    public void OffArmColliderExit(Collider hit)
+    {
+        if (onLedge)
+        {
+            onLedge = false;
+
+            Debug.Log(hit.gameObject.name + "Left");
+            playerRb.useGravity = true;
 
         }
 
