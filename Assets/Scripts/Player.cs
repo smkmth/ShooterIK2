@@ -38,6 +38,24 @@ public class Player : MonoBehaviour
     private Rigidbody playerRb;
     private DDOL gameManager;
 
+    private int health;
+    public int Health
+    {
+        get
+        {
+            return health;
+        }
+        set
+        {
+            Debug.Log("hit enemy health = " + health);
+            health = value;
+            if (health <= 0)
+            {
+                Die();
+            }
+        }
+    }
+
     [HideInInspector]
     public bool Grounded;
 
@@ -61,6 +79,8 @@ public class Player : MonoBehaviour
         Ground = gameManager.whatIsGround;
         WeaponHit = gameManager.whatIsEnemy;
         playerRb.drag = grounddrag;
+
+        Health = 100;
     }
 
     // Update is called once per frame
@@ -107,7 +127,7 @@ public class Player : MonoBehaviour
             {
                 RaycastHit hit;
 
-                Physics.Raycast(gun.transform.position, dir, out hit, 1000.0f, WeaponHit);
+                Physics.Raycast(gun.transform.position, dir * 1000.0f, out hit, 1000.0f, WeaponHit);
                 Debug.DrawRay(gun.transform.position, dir * 1000.0f, Color.yellow, 1.0f);
                 if (hit.transform != null)
                 {
@@ -128,9 +148,21 @@ public class Player : MonoBehaviour
         //jumping
         if (Input.GetButtonDown("Jump") && Grounded)
         {
-            Vector3 jump = new Vector3(1, 1, 0);
+            Vector3 jump = new Vector3(0, 1, 0);
+            if (Input.GetAxis("Horizontal") != 0)
+            {
+                if (facingRight)
+                {
+                    jump.x *= 2;
+                }
+                else
+                {
+                    jump.x *= -2;
+                }
 
-            playerRb.AddForce(Vector3.up * jumpHeight, ForceMode.Impulse);
+            }
+
+            playerRb.AddForce(jump * jumpHeight, ForceMode.Impulse);
 
         }
 
@@ -138,11 +170,12 @@ public class Player : MonoBehaviour
         {
             if (!onLedge)
             {
-                wallJumpVector.y = (jumpHeight / 2);
+                wallJumpVector.Normalize();
+                wallJumpVector.y = wallJumpHeight;
                 Debug.Log(wallJumpVector * wallJumpHeight);
 
                 playerRb.AddForce(wallJumpVector * wallJumpHeight, ForceMode.Impulse);
-                Debug.Log("walljump");
+                PlayerAnim.SetTrigger("WallJump");
             }
             else
             {
@@ -150,6 +183,11 @@ public class Player : MonoBehaviour
 
             }
         }
+    }
+
+    public void Die()
+    {
+        Destroy(gameObject);
     }
 
     private void FixedUpdate()
@@ -192,19 +230,30 @@ public class Player : MonoBehaviour
 
     }
 
+    public void TakeDamage(int damage)
+    {
+        Health -= damage;
+
+    }
+
+    public void TakeDamage(int damage, Vector3 knockback)
+    {
+        Health -= damage;
+        playerRb.AddForce(knockback,ForceMode.Impulse);
+    }
+
+
     private void OnCollisionEnter(Collision collision)
     {
-        if (!Grounded)
+   
+        if (collision.GetContact(0).normal.x > 0.9 || collision.GetContact(0).normal.x < -0.9)
         {
-            if (collision.GetContact(0).normal.x > 0.9 || collision.GetContact(0).normal.x < -0.9)
-            {
-                Debug.Log("Hit corner");
-                touchingWall = true;
-                Debug.DrawRay(collision.GetContact(0).point, collision.GetContact(0).normal, Color.red, 10.0f);
+            touchingWall = true;
+            Debug.DrawRay(collision.GetContact(0).point, collision.GetContact(0).normal, Color.red, 10.0f);
 
-                wallJumpVector = collision.GetContact(0).normal;
-            }
+            wallJumpVector = collision.GetContact(0).normal;
         }
+   
         
     }
     private void OnCollisionExit(Collision collision)
@@ -221,7 +270,6 @@ public class Player : MonoBehaviour
         playerRb.useGravity = false;
         onLedge = true;
 
-       // playerRb.AddForce(new Vector3(0.0f, 6.0f, 0),ForceMode.Impulse);
 
     }
     public void OffArmColliderExit(Collider hit)
