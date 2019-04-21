@@ -44,9 +44,27 @@ TagManager:
   - name: background
     uniqueID: 342810017
     locked: 0
+  - name: backgroundprops
+    uniqueID: 275806459
+    locked: 0
   - name: player
     uniqueID: 3935648423
     locked: 0
   - name: enemy
     uniqueID: 196454337
+    locked: 0
+  - name: BackPlatform
+    uniqueID: 1305165639
+    locked: 0
+  - name: MidPlatform
+    uniqueID: 2960633181
+    locked: 0
+  - name: Platform
+    uniqueID: 485476441
+    locked: 0
+  - name: Forgroundprops
+    uniqueID: 593898571
+    locked: 0
+  - name: Shadows
+    uniqueID: 1542364937
     locked: 0

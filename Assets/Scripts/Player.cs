@@ -8,6 +8,7 @@ public class Player : MonoBehaviour
 
     public GameObject MainArmIK;
     public GameObject gun;
+    public Camera playerCam;
 
     public Animator PlayerAnim;
 
@@ -115,11 +116,11 @@ public class Player : MonoBehaviour
             transform.localScale = notflipped;
             facingRight = true;
         }
-        Vector3 pos =Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        Vector3 pos = playerCam.ScreenToWorldPoint(Input.mousePosition);
         pos.z = 0;
         MainArmIK.transform.position = pos;
 
-        Vector3 dir = Input.mousePosition - Camera.main.WorldToScreenPoint(gun.transform.position);
+        Vector3 dir = Input.mousePosition - playerCam.WorldToScreenPoint(gun.transform.position);
 
         if (timer <= 0.0f)
         {
