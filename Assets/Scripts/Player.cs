@@ -154,23 +154,29 @@ public class Player : MonoBehaviour
             {
                 if (facingRight)
                 {
+                    Debug.Log("Jump right");
+
                     jump.x *= 2;
                 }
                 else
                 {
+                    Debug.Log("Jump Left");
                     jump.x *= -2;
                 }
 
             }
+            Debug.Log("Jump");
+
 
             playerRb.AddForce(jump * jumpHeight, ForceMode.Impulse);
 
         }
 
-        if (Input.GetButtonDown("Jump") && touchingWall)
+        if (Input.GetButtonDown("Jump") && touchingWall && !Grounded)
         {
             if (!onLedge)
             {
+                Debug.Log("Wall Jump");
                 wallJumpVector.Normalize();
                 wallJumpVector.y = wallJumpHeight;
                 Debug.Log(wallJumpVector * wallJumpHeight);
@@ -180,6 +186,7 @@ public class Player : MonoBehaviour
             }
             else
             {
+                Debug.Log("Ledge Catch");
                 playerRb.AddForce(new Vector3(0.0f, 6.0f, 0),ForceMode.Impulse);
 
             }
