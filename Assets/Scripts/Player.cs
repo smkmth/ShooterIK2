@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(CapsuleCollider),typeof(Rigidbody))]
-public class Player : MonoBehaviour
+public class Player : Enemy
 {
 
     public GameObject MainArmIK;
     public GameObject gun;
     public Camera playerCam;
+
+
 
     public Animator PlayerAnim;
 
@@ -30,32 +32,26 @@ public class Player : MonoBehaviour
 
     public bool touchingWall = false;
     public bool onLedge = false;
+    public bool canMove = true;
 
 
     private LayerMask Ground; 
     private LayerMask WeaponHit;
 
     private CapsuleCollider playerCollider;
-    private Rigidbody playerRb;
+   // private Rigidbody rb;
     private DDOL gameManager;
 
-    private int health;
-    public int Health
-    {
-        get
-        {
-            return health;
-        }
-        set
-        {
-            Debug.Log("hit enemy health = " + health);
-            health = value;
-            if (health <= 0)
-            {
-                Die();
-            }
-        }
-    }
+    public GameObject particleO;
+    public GameObject playerShoulder;
+
+    public ParticleSystem gunParticle;
+    public ParticleSystem gunFlashParticle;
+
+    public AudioClip gunshot;
+    AudioSource pAudioSource;
+
+  
 
     [HideInInspector]
     public bool Grounded;
@@ -73,15 +69,18 @@ public class Player : MonoBehaviour
     void Start()
     {
         playerCollider = GetComponent<CapsuleCollider>();
-        playerRb = GetComponent<Rigidbody>();
+        rb = GetComponent<Rigidbody>();
         gameManager = GetComponentInParent<DDOL>();
 
 
         Ground = gameManager.whatIsGround;
         WeaponHit = gameManager.whatIsEnemy;
-        playerRb.drag = grounddrag;
+        rb.drag = grounddrag;
 
-        Health = 100;
+
+        pAudioSource= gameObject.AddComponent<AudioSource>();
+        pAudioSource.clip = gunshot;
+   
     }
 
     // Update is called once per frame
@@ -121,15 +120,37 @@ public class Player : MonoBehaviour
         MainArmIK.transform.position = pos;
 
         Vector3 dir = Input.mousePosition - playerCam.WorldToScreenPoint(gun.transform.position);
-
+      
         if (timer <= 0.0f)
         {
             if (Input.GetMouseButtonDown(0))
             {
+                if (facingRight)
+                {
+      
+                    Vector3 rot = playerShoulder.transform.rotation.eulerAngles;
+                    rot.z += 180;
+        
+                    Quaternion rot180degrees = Quaternion.Euler(rot);
+                  
+                    particleO.transform.rotation = rot180degrees;
+                }
+                else
+                {
+                    particleO.transform.rotation = playerShoulder.transform.rotation;
+
+
+                }
                 RaycastHit hit;
+              
+                gunParticle.Emit(1);
+                gunFlashParticle.Play();
+                pAudioSource.Play();
+
 
                 Physics.Raycast(gun.transform.position, dir * 1000.0f, out hit, 1000.0f, WeaponHit);
                 Debug.DrawRay(gun.transform.position, dir * 1000.0f, Color.yellow, 1.0f);
+                
                 if (hit.transform != null)
                 {
                     if (hit.transform.gameObject.GetComponent<Enemy>())
@@ -145,58 +166,72 @@ public class Player : MonoBehaviour
         {
             timer -= Time.deltaTime;
         }
-
-        //jumping
-        if (Input.GetButtonDown("Jump") && Grounded)
+        if (canMove)
         {
-            Vector3 jump = new Vector3(0, 1, 0);
-            if (Input.GetAxis("Horizontal") != 0)
-            {
-                if (facingRight)
-                {
-                    Debug.Log("Jump right");
 
-                    jump.x *= 2;
+
+            //jumping
+            if (Input.GetButtonDown("Jump") && Grounded)
+            {
+                Vector3 jump = new Vector3(0, 1, 0);
+                if (Input.GetAxis("Horizontal") != 0)
+                {
+                    if (facingRight)
+                    {
+                        Debug.Log("Jump right");
+
+                        jump.x *= 2;
+                    }
+                    else
+                    {
+                        Debug.Log("Jump Left");
+                        jump.x *= -2;
+                    }
+
+                }
+                Debug.Log("Jump");
+
+
+                rb.AddForce(jump * jumpHeight, ForceMode.Impulse);
+
+            }
+            if (Input.GetButtonDown("Kick"))
+            {
+                StopCoroutine(Kick());
+                StartCoroutine(Kick());
+            }
+
+            if (Input.GetButtonDown("Jump") && touchingWall && !Grounded)
+            {
+                if (!onLedge)
+                {
+                    Debug.Log("Wall Jump");
+                    wallJumpVector.Normalize();
+                    wallJumpVector.y = wallJumpHeight;
+                    Debug.Log(wallJumpVector * wallJumpHeight);
+
+                    rb.AddForce(wallJumpVector * wallJumpHeight, ForceMode.Impulse);
+                    PlayerAnim.SetTrigger("WallJump");
                 }
                 else
                 {
-                    Debug.Log("Jump Left");
-                    jump.x *= -2;
+                    Debug.Log("Ledge Catch");
+                    rb.AddForce(new Vector3(0.0f, 6.0f, 0), ForceMode.Impulse);
+
                 }
-
-            }
-            Debug.Log("Jump");
-
-
-            playerRb.AddForce(jump * jumpHeight, ForceMode.Impulse);
-
-        }
-
-        if (Input.GetButtonDown("Jump") && touchingWall && !Grounded)
-        {
-            if (!onLedge)
-            {
-                Debug.Log("Wall Jump");
-                wallJumpVector.Normalize();
-                wallJumpVector.y = wallJumpHeight;
-                Debug.Log(wallJumpVector * wallJumpHeight);
-
-                playerRb.AddForce(wallJumpVector * wallJumpHeight, ForceMode.Impulse);
-                PlayerAnim.SetTrigger("WallJump");
-            }
-            else
-            {
-                Debug.Log("Ledge Catch");
-                playerRb.AddForce(new Vector3(0.0f, 6.0f, 0),ForceMode.Impulse);
-
             }
         }
     }
 
-    public void Die()
+    IEnumerator Kick()
     {
-        Destroy(gameObject);
+        canMove = false;
+        PlayerAnim.SetTrigger("Kick");
+        yield return new WaitForSeconds(0.5f);
+        canMove = true;
     }
+
+  
 
     private void FixedUpdate()
     {
@@ -204,52 +239,44 @@ public class Player : MonoBehaviour
 
         //movement 
         float inputLR = Input.GetAxis("Horizontal");
-        if (inputLR != 0 )
+        if (canMove)
         {
-            if (walking)
-            {
 
-                PlayerAnim.SetBool("Walking", true);
-                PlayerAnim.SetBool("Running", false);
-                if (playerRb.velocity.magnitude < maxSpeed)
+            if (inputLR != 0)
+            {
+                if (walking)
                 {
-                    playerRb.AddForce(Vector3.right * inputLR * Time.deltaTime * walkSpeed, ForceMode.Impulse);
+
+                    PlayerAnim.SetBool("Walking", true);
+                    PlayerAnim.SetBool("Running", false);
+                    if (rb.velocity.magnitude < maxSpeed)
+                    {
+                        rb.AddForce(Vector3.right * inputLR * Time.deltaTime * walkSpeed, ForceMode.Impulse);
+                    }
+
+                }
+                else
+                {
+                    PlayerAnim.SetBool("Walking", false);
+                    PlayerAnim.SetBool("Running", true);
+                    if (rb.velocity.magnitude < maxSpeed)
+                    {
+                        rb.AddForce(Vector3.right * inputLR * Time.deltaTime * runSpeed, ForceMode.Impulse);
+                    }
                 }
 
             }
             else
             {
+                PlayerAnim.SetBool("Running", false);
                 PlayerAnim.SetBool("Walking", false);
-                PlayerAnim.SetBool("Running", true);
-                if (playerRb.velocity.magnitude < maxSpeed)
-                {
-                    playerRb.AddForce(Vector3.right * inputLR * Time.deltaTime * runSpeed, ForceMode.Impulse);
-                }
+
             }
-
         }
-        else
-        {
-            PlayerAnim.SetBool("Running", false);
-            PlayerAnim.SetBool("Walking", false);
-
-        }
-    
 
     }
 
-    public void TakeDamage(int damage)
-    {
-        Health -= damage;
-
-    }
-
-    public void TakeDamage(int damage, Vector3 knockback)
-    {
-        Health -= damage;
-        playerRb.AddForce(knockback,ForceMode.Impulse);
-    }
-
+  
 
     private void OnCollisionEnter(Collision collision)
     {
@@ -275,7 +302,7 @@ public class Player : MonoBehaviour
     {
       
         Debug.Log(hit.gameObject.name + "Hit");
-        playerRb.useGravity = false;
+        rb.useGravity = false;
         onLedge = true;
 
 
@@ -285,7 +312,7 @@ public class Player : MonoBehaviour
         if (onLedge)
         {
             onLedge = false;
-            playerRb.useGravity = true;
+            rb.useGravity = true;
 
         }
 

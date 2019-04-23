@@ -13,13 +13,13 @@ TagManager:
   - UI
   - 
   - 
-  - Ground
   - Enemy
-  - Corner
+  - Player
+  - PlayerDamage
+  - EnemyDamage
   - Lighting
-  - 
-  - 
-  - 
+  - Ground
+  - Corner
   - 
   - 
   - 
@@ -67,4 +67,7 @@ TagManager:
     locked: 0
   - name: Shadows
     uniqueID: 1542364937
+    locked: 0
+  - name: Particals
+    uniqueID: 3803733041
     locked: 0

@@ -4,22 +4,19 @@ using UnityEngine;
 
 public class HitDetect : MonoBehaviour
 {
-    private void OnCollisionEnter(Collision collision)
-    {
 
-        if (collision.gameObject.layer == LayerMask.NameToLayer("Player"))
-        {
-            collision.transform.gameObject.GetComponent<Player>().Health -= 10;
-            Debug.Log(collision.transform.gameObject.GetComponent<Player>().Health);
-
-        }
-
-    }
+    public LayerMask layerToDetect;
+   
+    
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.name == "Player")
+        //Debug.Log(other.gameObject.layer + "     "+ System.Convert.ToString(other.gameObject.layer, 2));
+        //Debug.Log("detect " + layerToDetect.value + "     " + System.Convert.ToString(layerToDetect.value, 2));
+       
+        if (layerToDetect.value == (layerToDetect.value | (1 << other.gameObject.layer)))
         {
+            Debug.Log("hit");
             Vector3 forcehit = new Vector3();
             if (other.transform.position.x > transform.position.x)
             {
@@ -34,8 +31,8 @@ public class HitDetect : MonoBehaviour
                 forcehit.y = 3;
                 forcehit.z = 0;
             }
-            other.gameObject.GetComponent<Player>().TakeDamage(10, forcehit);
-            Debug.Log(other.gameObject.GetComponent<Player>().Health);
+            other.gameObject.GetComponent<Enemy>().TakeDamage(10, forcehit);
+            Debug.Log(other.gameObject.GetComponent<Enemy>().Health);
 
 
         }
