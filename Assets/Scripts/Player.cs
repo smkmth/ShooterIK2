@@ -80,7 +80,9 @@ public class Player : Enemy
 
         pAudioSource= gameObject.AddComponent<AudioSource>();
         pAudioSource.clip = gunshot;
-   
+
+        Health = 100;
+
     }
 
     // Update is called once per frame

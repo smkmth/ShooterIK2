@@ -16,7 +16,9 @@ public class TheSwing : Enemy
     private void Start()
     {
         Health = 100;
-        player = GameObject.Find("Player").GetComponent<Player>();
+        player = GameObject.Find("Player").GetComponent<Player>(); 
+        rb = GetComponent<Rigidbody>();
+
 
     }
 

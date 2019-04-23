@@ -24,12 +24,7 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    public void Start()
-    {
-        Health = 100;
-        GetComponent<Rigidbody>();
-        
-    }
+    
 
     public void TakeDamage(int damage)
     {
