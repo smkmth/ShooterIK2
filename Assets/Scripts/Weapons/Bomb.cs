@@ -7,26 +7,28 @@ public class Bomb : MonoBehaviour
 {
    
     public LayerMask hitmask;
+    public float ExplosiveForce;
+    public float ExplosiveRange;
+
 
     private void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.layer == LayerMask.NameToLayer("Ground"))
         {
 
-            Collider[] results = Physics.OverlapSphere(collision.GetContact(0).point, 3.0f, hitmask);
+            Collider[] results = Physics.OverlapSphere(collision.GetContact(0).point, ExplosiveRange, hitmask);
 
             foreach (Collider collider in results)
             {
-                Debug.Log("htaTGASD");
                 if (collider.transform.gameObject.GetComponent<Rigidbody>())
                 {
                     if (collider.transform.position.x > transform.position.x)
                     {
-                        collider.transform.gameObject.GetComponent<Rigidbody>().AddExplosionForce(300.0f, transform.position, 300);
+                        collider.transform.gameObject.GetComponent<Rigidbody>().AddExplosionForce(ExplosiveForce, transform.position, ExplosiveRange, 100.0f);
                     }
                     else
                     {
-                        collider.transform.gameObject.GetComponent<Rigidbody>().AddExplosionForce(-300.0f, transform.position, 300);
+                        collider.transform.gameObject.GetComponent<Rigidbody>().AddExplosionForce(ExplosiveForce, transform.position, 300);
 
                     }
                     if (collider.gameObject.GetComponent<Player>())
