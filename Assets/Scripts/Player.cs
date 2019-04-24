@@ -38,7 +38,7 @@ public class Player : Enemy
     private LayerMask Ground; 
     private LayerMask WeaponHit;
 
-    private CapsuleCollider playerCollider;
+    public CapsuleCollider playerCollider;
    // private Rigidbody rb;
     private DDOL gameManager;
 
@@ -86,12 +86,25 @@ public class Player : Enemy
 
     }
 
+    void OnDrawGizmosSelected()
+    {
+        // Draw a yellow sphere at the transform's position
+        Vector3 modbounds = new Vector3(playerCollider.bounds.center.x , playerCollider.bounds.min.y, playerCollider.bounds.center.z); 
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawSphere(modbounds, 0.03f);
+    }
+
     // Update is called once per frame
     void Update()
     {
 
-        Grounded = Physics.CheckCapsule(playerCollider.bounds.center, new Vector3(playerCollider.bounds.center.x, playerCollider.bounds.min.y, playerCollider.bounds.center.z), 0.3f, Ground);
-        Debug.DrawLine(playerCollider.bounds.center, new Vector3(playerCollider.bounds.center.x, playerCollider.bounds.min.y, playerCollider.bounds.center.z), Color.red, 1.0f) ;
+
+        Vector3 modbounds = new Vector3(playerCollider.bounds.center.x , playerCollider.bounds.min.y, playerCollider.bounds.center.z); 
+
+        //Grounded = Physics.CheckCapsule(playerCollider.bounds.center, new Vector3(playerCollider.bounds.center.x, playerCollider.bounds.min.y, playerCollider.bounds.center.z), 0.2f, Ground);
+        //Debug.DrawLine(playerCollider.bounds.center * -0.5f, new Vector3(playerCollider.bounds.center.x, playerCollider.bounds.min.y, playerCollider.bounds.center.z), Color.red, .1f) ;
+
+        Grounded = Physics.CheckSphere(modbounds, 0.03f, Ground);
         NearLedge = Physics.CheckSphere(transform.position, 1f ,LayerMask.NameToLayer("Corner"));
         if (Grounded)
         { 
