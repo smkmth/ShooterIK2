@@ -7,16 +7,19 @@ public class DDOL : MonoBehaviour
 
     public LayerMask whatIsGround;
     public LayerMask whatIsEnemy;
+    private Player playerchar;
+    public Vector3 lastCheckpoint;
 
     // Start is called before the first frame update
     void Awake()
     {
         //makes sure that this gameobject and children always exist
         DontDestroyOnLoad(this.gameObject);
+        playerchar = GetComponentInChildren<Player>();
 
-        RunTests();
+        // RunTests();
 
-      
+
 
     }
 
@@ -37,7 +40,7 @@ public class DDOL : MonoBehaviour
             Debug.LogError("No Layer Enemy, we need an Enemy layer, and every enemy  to be tagged 'Enemy' ");
         }
 
-        Player playerchar = GetComponentInChildren<Player>();
+
         
         if(playerchar == null)
         {
@@ -45,8 +48,17 @@ public class DDOL : MonoBehaviour
 
         }
 
-
-
+    }
+    public void ResetPlayer()
+    {
+        playerchar.Health = 100;
+        playerchar.transform.position = lastCheckpoint;
+        
+        
+    }
+    public void RestartGame()
+    {
+        Application.LoadLevel(Application.loadedLevel);
 
     }
 }

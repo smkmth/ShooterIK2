@@ -5,7 +5,7 @@ using UnityEngine;
 public class Enemy : MonoBehaviour
 {
     protected Rigidbody rb;
-
+    private bool takingDamage = false;
     protected int health;
     public int Health
     {
@@ -16,9 +16,9 @@ public class Enemy : MonoBehaviour
         set
         {
             health = value;
+            Debug.Log("hit enemy health = " + health);
             if (health <= 0)
             {
-                Debug.Log("hit enemy health = " + health);
                 KillEnemy();
             }
         }
@@ -28,20 +28,56 @@ public class Enemy : MonoBehaviour
 
     public void TakeDamage(int damage)
     {
+
         Health -= damage;
+        StopCoroutine(HitFlash());
+        StartCoroutine(HitFlash());
 
     }
+
+    IEnumerator HitFlash()
+    {
+        takingDamage = true;
+    
+        yield return new WaitForSeconds(.3f);
+        takingDamage = false;
+
+
+    }
+
+
 
     public void TakeDamage(int damage, Vector3 knockback)
     {
-        Health -= damage;
-        rb.AddForce(knockback, ForceMode.Impulse);
+
+        if (!takingDamage)
+        {
+            Health -= damage;
+            rb.AddForce(knockback, ForceMode.Impulse);
+            StopCoroutine(HitFlash());
+            StartCoroutine(HitFlash());
+        }        
     }
 
 
-    void KillEnemy()
+    virtual public void KillEnemy()
     {
         Destroy(gameObject);
+    }
+
+    public virtual void Alert()
+    {
+        Debug.Log("Enemy Alerted");
+    }
+
+    public virtual void StopMoving()
+    {
+        Debug.Log("Enemy stopped");
+    }
+
+    public virtual void Forget()
+    {
+        Debug.Log("Enemy Forgotten");
     }
 
 }

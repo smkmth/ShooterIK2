@@ -47,13 +47,13 @@ public class Player : Enemy
 
     public ParticleSystem gunParticle;
     public ParticleSystem gunFlashParticle;
-
+    public Vector3 Knockback;
     public AudioClip gunshot;
     AudioSource pAudioSource;
 
   
 
-    [HideInInspector]
+   // [HideInInspector]
     public bool Grounded;
 
     public bool NearLedge;
@@ -82,6 +82,7 @@ public class Player : Enemy
         pAudioSource.clip = gunshot;
 
         Health = 100;
+        gameManager.lastCheckpoint = transform.position;
 
     }
 
@@ -89,7 +90,8 @@ public class Player : Enemy
     void Update()
     {
 
-        Grounded = Physics.CheckCapsule(playerCollider.bounds.center, new Vector3(playerCollider.bounds.center.x, playerCollider.bounds.min.y, playerCollider.bounds.center.z), 0.01f, Ground);
+        Grounded = Physics.CheckCapsule(playerCollider.bounds.center, new Vector3(playerCollider.bounds.center.x, playerCollider.bounds.min.y, playerCollider.bounds.center.z), 0.3f, Ground);
+        Debug.DrawLine(playerCollider.bounds.center, new Vector3(playerCollider.bounds.center.x, playerCollider.bounds.min.y, playerCollider.bounds.center.z), Color.red, 1.0f) ;
         NearLedge = Physics.CheckSphere(transform.position, 1f ,LayerMask.NameToLayer("Corner"));
         if (Grounded)
         { 
@@ -155,9 +157,22 @@ public class Player : Enemy
                 
                 if (hit.transform != null)
                 {
-                    if (hit.transform.gameObject.GetComponent<Enemy>())
+                    if (hit.transform.gameObject.GetComponent<HitDetect>())
                     {
-                        hit.transform.gameObject.GetComponent<Enemy>().Health -= 10;
+             
+                        if (hit.transform.position.x > transform.position.x)
+                        {
+                            Knockback.x = Mathf.Abs(Knockback.x);
+                        
+                        }
+                        else
+                        {
+                            Knockback.x = Mathf.Abs(Knockback.x)* -1;
+
+                        }
+                    
+
+                        hit.transform.gameObject.GetComponent<HitDetect>().DoDamageToParent(10, Knockback);
                     }
                 }
                 timer = fireDelay;
@@ -180,20 +195,15 @@ public class Player : Enemy
                 {
                     if (facingRight)
                     {
-                        Debug.Log("Jump right");
-
+          
                         jump.x *= 2;
                     }
                     else
                     {
-                        Debug.Log("Jump Left");
                         jump.x *= -2;
                     }
 
                 }
-                Debug.Log("Jump");
-
-
                 rb.AddForce(jump * jumpHeight, ForceMode.Impulse);
 
             }
@@ -318,5 +328,19 @@ public class Player : Enemy
 
         }
 
+    }
+
+    public void SetNewCheckpoint(Vector3 checkpoint)
+    {
+        checkpoint.z = 0;
+        gameManager.lastCheckpoint = checkpoint;
+        Debug.Log("Made it to checkpoint");
+
+    }
+
+    public override void KillEnemy()
+    {
+        gameManager.ResetPlayer();
+        gameManager.RestartGame();
     }
 }

@@ -26,7 +26,7 @@ public class OneWayPlatform : MonoBehaviour
         if (layerToEffect.value == (layerToEffect.value | (1 << other.gameObject.layer)))
         {
             Physics.IgnoreCollision(platform, player, true);
-            Debug.Log("this");
+
             // platform.enabled = false;
         }
     }
@@ -35,7 +35,7 @@ public class OneWayPlatform : MonoBehaviour
         if (layerToEffect.value == (layerToEffect.value | (1 << other.gameObject.layer)))
         {
             Physics.IgnoreCollision(platform, player, false);
-            Debug.Log("exit");
+
             // platform.enabled = false;
         }
     }
