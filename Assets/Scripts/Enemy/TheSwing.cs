@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class TheSwing : Enemy
+public class TheSwing : Character
 {
     public Animator swingAnimator;
 

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BombGuy : Zombie
+public class BombGuy : Follower
 {
     public float ThrowTime;
     float timer;
@@ -17,9 +17,8 @@ public class BombGuy : Zombie
     // Start is called before the first frame update
     public override void Start()
     {
-        player = GameObject.Find("Player").GetComponent<Player>();
-        rb = GetComponent<Rigidbody>();
-        Health = MaxHealth;
+
+        base.Start();
         timer = ThrowTime;
 
     }

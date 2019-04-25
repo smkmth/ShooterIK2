@@ -1394,13 +1394,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   MaxHealth: 30
+  stopDistance: 0
+  tooCloseDistance: 0
   ThrowTime: 2
   bombPrefab: {fileID: 2410975193947669988, guid: 570e8118f30a9ac41b84855ed3db2633,
     type: 3}
   throwArc: {x: -4, y: 2, z: 0}
   throwArcMod: 1
   bombExplosiveForce: 300
-  bombExplosiveRange: 2
+  bombExplosiveRange: 1
   bombExplosiveDamage: 20
 --- !u!23 &715745999
 MeshRenderer:
@@ -1770,6 +1772,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   MaxHealth: 30
+  stopDistance: 0
+  tooCloseDistance: 0
   ThrowTime: 1
   bombPrefab: {fileID: 2410975193947669988, guid: 570e8118f30a9ac41b84855ed3db2633,
     type: 3}
@@ -3686,6 +3690,21 @@ PrefabInstance:
         type: 3}
       propertyPath: damage
       value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 5514269565220131018, guid: e34db5959dcca144e81abd5ee37b10b9,
+        type: 3}
+      propertyPath: stopDistance
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5514269565220131018, guid: e34db5959dcca144e81abd5ee37b10b9,
+        type: 3}
+      propertyPath: tooCloseDistance
+      value: 0.9
+      objectReference: {fileID: 0}
+    - target: {fileID: 5514269565686612981, guid: e34db5959dcca144e81abd5ee37b10b9,
+        type: 3}
+      propertyPath: m_Radius
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: e34db5959dcca144e81abd5ee37b10b9, type: 3}

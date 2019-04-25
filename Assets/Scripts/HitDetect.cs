@@ -19,7 +19,7 @@ public class HitDetect : MonoBehaviour
     public int damage;
     public bool isActive = true;
     public Vector3 force;
-    public Enemy parent;
+    public Character parent;
     public HitDetect overlapper;
     public bool alwaysDoDamage =false;
     private bool overlapping;
@@ -47,7 +47,7 @@ public class HitDetect : MonoBehaviour
 
                 if (parent == null)
                 {
-                    parent = GetComponentInParent<Enemy>();
+                    parent = GetComponentInParent<Character>();
                 }
                 break;
 
@@ -135,7 +135,7 @@ public class HitDetect : MonoBehaviour
 
                         }
                         overlapping = true;
-                        Debug.Log("hit " + damage + " " + other.gameObject.GetComponent<Enemy>().Health);
+                        Debug.Log("hit " + damage + " " + other.gameObject.GetComponent<Character>().Health);
                         
                         break;
 

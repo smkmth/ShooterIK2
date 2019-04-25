@@ -2,11 +2,19 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Enemy : MonoBehaviour
+[RequireComponent(typeof(Rigidbody))]
+public class Character : MonoBehaviour
 {
     protected Rigidbody rb;
+    protected HitDetect thisHitDetect;
+    protected Player player;
+
     private bool takingDamage = false;
     public int MaxHealth;
+
+    protected bool seenPlayer;
+    protected bool canMove = true;
+
     protected int health;
     public int Health
     {
@@ -20,15 +28,29 @@ public class Enemy : MonoBehaviour
             Debug.Log("hit enemy health = " + health);
             if (health <= 0)
             {
-                KillEnemy();
+                KillCharacter();
             }
         }
+    }
+    public virtual void Start()
+    {
+        player = GameObject.Find("Player").GetComponent<Player>();
+        if (player == null)
+        {
+            Debug.LogError("No Player!");
+        }
+        Health = MaxHealth;
+        rb = GetComponent<Rigidbody>();
+        thisHitDetect = GetComponent<HitDetect>();
+        thisHitDetect.isActive = true;
+        Health = MaxHealth;
+
+
     }
 
 
 
-
-    public void TakeDamage(int damage)
+    public virtual void TakeDamage(int damage)
     {
 
         Health -= damage;
@@ -49,7 +71,7 @@ public class Enemy : MonoBehaviour
 
 
 
-    public void TakeDamage(int damage, Vector3 knockback)
+    public virtual void TakeDamage(int damage, Vector3 knockback)
     {
 
         if (!takingDamage)
@@ -62,14 +84,14 @@ public class Enemy : MonoBehaviour
     }
 
 
-    virtual public void KillEnemy()
+    virtual public void KillCharacter()
     {
         Destroy(gameObject);
     }
 
     public virtual void Alert()
     {
-        Debug.Log("Enemy Alerted");
+        Debug.Log(" EnemyAlerted");
     }
 
     public virtual void StopMoving()

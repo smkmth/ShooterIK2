@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(CapsuleCollider),typeof(Rigidbody))]
-public class Player : Enemy
+public class Player : Character
 {
 
     public GameObject MainArmIK;
@@ -33,7 +33,6 @@ public class Player : Enemy
 
     public bool touchingWall = false;
     public bool onLedge = false;
-    public bool canMove = true;
 
     public float rollDistance;
     public int takenJumpActions =0;
@@ -55,9 +54,6 @@ public class Player : Enemy
     public AudioClip gunshot;
     public UIManager uiManager;
     AudioSource pAudioSource;
-
-
-    public HitDetect playerHitDetect;
 
    // [HideInInspector]
     public bool Grounded;
@@ -82,10 +78,11 @@ public class Player : Enemy
 
 
     // Start is called before the first frame update
-    void Start()
+    public override void Start()
     {
+        base.Start();
+
         playerCollider = GetComponent<CapsuleCollider>();
-        rb = GetComponent<Rigidbody>();
         gameManager = GetComponentInParent<DDOL>();
 
 
@@ -94,13 +91,11 @@ public class Player : Enemy
         rb.drag = grounddrag;
 
 
-        pAudioSource= gameObject.AddComponent<AudioSource>();
+        pAudioSource= GetComponent<AudioSource>();
         pAudioSource.clip = gunshot;
 
-        Health = MaxHealth;
         currentstamina = MaxStamina;
         gameManager.lastCheckpoint = transform.position;
-        playerHitDetect = GetComponent<HitDetect>();
 
     }
 
@@ -309,10 +304,11 @@ public class Player : Enemy
 
     IEnumerator Roll()
     {
-        playerHitDetect.isActive = false;
+        thisHitDetect.isActive = false;
         canMove = false;
         currentstamina -= RollStaminaLoss;
-        PlayerAnim.SetTrigger("Roll"); Debug.Log("Roll");
+        PlayerAnim.SetTrigger("Roll");
+        Debug.Log("Roll");
         Vector3 roll = new Vector3(1, 0, 0);
         if (facingRight)
         {
@@ -323,12 +319,11 @@ public class Player : Enemy
             roll.x *= -2;
         }
 
-
         rb.AddForce(roll * rollDistance, ForceMode.Impulse);
         yield return new WaitForSeconds(.2f);
         canMove = true;
         yield return new WaitForSeconds(1f);
-        playerHitDetect.isActive = true;
+        thisHitDetect.isActive = true;
     }
     IEnumerator Kick()
     {
@@ -434,7 +429,7 @@ public class Player : Enemy
 
     }
 
-    public override void KillEnemy()
+    public override void KillCharacter()
     {
         rb.velocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
