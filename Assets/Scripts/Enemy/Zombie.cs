@@ -8,7 +8,7 @@ public class Zombie : Enemy
     protected HitDetect thisHitDetect;
     protected bool seenPlayer;
     protected bool canMove = true;
-    
+        
 
 
     public virtual void Start()
@@ -18,10 +18,11 @@ public class Zombie : Enemy
         {
             Debug.LogError("No Player!");
         }
-        Health = 40;
+        Health = MaxHealth;
         rb = GetComponent<Rigidbody>();
         thisHitDetect = GetComponent<HitDetect>();
         thisHitDetect.isActive = true;
+        Health = MaxHealth;
 
 
     }

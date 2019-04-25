@@ -51,10 +51,13 @@ public class DDOL : MonoBehaviour
     }
     public void ResetPlayer()
     {
-        playerchar.Health = 100;
+       
         playerchar.transform.position = lastCheckpoint;
-        
-        
+        playerchar.Health = playerchar.MaxHealth;
+        playerchar.transform.position = lastCheckpoint;
+        playerchar.currentstamina= playerchar.MaxStamina;
+
+
     }
     public void RestartGame()
     {

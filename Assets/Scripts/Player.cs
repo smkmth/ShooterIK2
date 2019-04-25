@@ -20,6 +20,7 @@ public class Player : Enemy
     private float runSpeed;
     public float jumpHeight;
     public float wallJumpHeight;
+    public float wallJumpWidth;
     private Vector3 wallJumpVector;
     public float airspeed;
     public float maxSpeed;
@@ -34,6 +35,9 @@ public class Player : Enemy
     public bool onLedge = false;
     public bool canMove = true;
 
+    public float rollDistance;
+    public int takenJumpActions =0;
+    public int MaxJumpActions;
 
     private LayerMask Ground; 
     private LayerMask WeaponHit;
@@ -49,9 +53,11 @@ public class Player : Enemy
     public ParticleSystem gunFlashParticle;
     public Vector3 Knockback;
     public AudioClip gunshot;
+    public UIManager uiManager;
     AudioSource pAudioSource;
 
-  
+
+    public HitDetect playerHitDetect;
 
    // [HideInInspector]
     public bool Grounded;
@@ -64,6 +70,16 @@ public class Player : Enemy
 
     private Vector3 flip = new Vector3(-.1f, .1f, .1f);
     private Vector3 notflipped = new Vector3(.1f, .1f, .1f);
+
+   // public int MaxHealth;
+
+    public float currentstamina;
+    public float MaxStamina;
+    public float RollStaminaLoss;
+    public float KickStaminaLoss;
+    public float StaminaRegainRate;
+    public float JumpStaminaLoss;
+
 
     // Start is called before the first frame update
     void Start()
@@ -81,8 +97,10 @@ public class Player : Enemy
         pAudioSource= gameObject.AddComponent<AudioSource>();
         pAudioSource.clip = gunshot;
 
-        Health = 100;
+        Health = MaxHealth;
+        currentstamina = MaxStamina;
         gameManager.lastCheckpoint = transform.position;
+        playerHitDetect = GetComponent<HitDetect>();
 
     }
 
@@ -92,23 +110,22 @@ public class Player : Enemy
         Vector3 modbounds = new Vector3(playerCollider.bounds.center.x , playerCollider.bounds.min.y, playerCollider.bounds.center.z); 
         Gizmos.color = Color.yellow;
         Gizmos.DrawSphere(modbounds, 0.03f);
+
+       // Gizmos.color = Color.blue;
+       // Gizmos.DrawSphere(transform.position, .2f);
     }
 
     // Update is called once per frame
     void Update()
     {
 
-
         Vector3 modbounds = new Vector3(playerCollider.bounds.center.x , playerCollider.bounds.min.y, playerCollider.bounds.center.z); 
-
-        //Grounded = Physics.CheckCapsule(playerCollider.bounds.center, new Vector3(playerCollider.bounds.center.x, playerCollider.bounds.min.y, playerCollider.bounds.center.z), 0.2f, Ground);
-        //Debug.DrawLine(playerCollider.bounds.center * -0.5f, new Vector3(playerCollider.bounds.center.x, playerCollider.bounds.min.y, playerCollider.bounds.center.z), Color.red, .1f) ;
-
         Grounded = Physics.CheckSphere(modbounds, 0.03f, Ground);
-        NearLedge = Physics.CheckSphere(transform.position, 1f ,LayerMask.NameToLayer("Corner"));
-        if (Grounded)
-        { 
+        NearLedge = Physics.CheckSphere(transform.position, .2f ,LayerMask.NameToLayer("Corner"));
 
+        if (Grounded)
+        {
+            takenJumpActions = 0;
             walkSpeed = BaseWalkSpeed;
             runSpeed = BaseRunSpeed;
         }
@@ -196,43 +213,85 @@ public class Player : Enemy
         {
             timer -= Time.deltaTime;
         }
+
         if (canMove)
         {
 
-
-            //jumping
-            if (Input.GetButtonDown("Jump") && Grounded)
+            if (currentstamina < MaxStamina)
             {
-                Vector3 jump = new Vector3(0, 1, 0);
-                if (Input.GetAxis("Horizontal") != 0)
-                {
-                    if (facingRight)
-                    {
-          
-                        jump.x *= 2;
-                    }
-                    else
-                    {
-                        jump.x *= -2;
-                    }
+                currentstamina += Time.deltaTime * StaminaRegainRate;
+            }
 
+
+            //dodge
+            if (Input.GetMouseButtonDown(1))
+            {
+                if (takenJumpActions <=MaxJumpActions)
+                {
+                    if (currentstamina > RollStaminaLoss)
+                    {
+                        takenJumpActions +=1;
+                        StopCoroutine(Roll());
+                        StartCoroutine(Roll());
+                    }
                 }
-                rb.AddForce(jump * jumpHeight, ForceMode.Impulse);
+            }
+            //jumping
+            if (Input.GetButtonDown("Jump"))
+            {
+                if (Grounded || takenJumpActions <= (MaxJumpActions-1))
+                {
+                    if(takenJumpActions != 0)
+                    {
+                        currentstamina -= JumpStaminaLoss;
+
+                    }
+                    takenJumpActions += 1;
+
+                    Vector3 jump = new Vector3(0, 1, 0);
+                    if (Input.GetAxis("Horizontal") != 0)
+                    {
+                        if (facingRight)
+                        {
+
+                            jump.x *= 2;
+                        }
+                        else
+                        {
+                            jump.x *= -2;
+                        }
+
+                    }
+                    rb.AddForce(jump * jumpHeight, ForceMode.Impulse);
+                }
 
             }
+            //kick
             if (Input.GetButtonDown("Kick"))
             {
-                StopCoroutine(Kick());
-                StartCoroutine(Kick());
+                if (currentstamina > KickStaminaLoss)
+                {
+                    StopCoroutine(Kick());
+                    StartCoroutine(Kick());
+                }
             }
-
+            //walljump
             if (Input.GetButtonDown("Jump") && touchingWall && !Grounded)
             {
                 if (!onLedge)
                 {
                     Debug.Log("Wall Jump");
                     wallJumpVector.Normalize();
-                    wallJumpVector.y = wallJumpHeight;
+                    wallJumpVector.y += wallJumpHeight;
+                    if (wallJumpVector.x > 0)
+                    {
+                        wallJumpVector.x += wallJumpWidth;
+
+                    }else
+                    {
+                        wallJumpVector.x -= wallJumpWidth;
+
+                    }
                     Debug.Log(wallJumpVector * wallJumpHeight);
 
                     rb.AddForce(wallJumpVector * wallJumpHeight, ForceMode.Impulse);
@@ -248,8 +307,32 @@ public class Player : Enemy
         }
     }
 
+    IEnumerator Roll()
+    {
+        playerHitDetect.isActive = false;
+        canMove = false;
+        currentstamina -= RollStaminaLoss;
+        PlayerAnim.SetTrigger("Roll"); Debug.Log("Roll");
+        Vector3 roll = new Vector3(1, 0, 0);
+        if (facingRight)
+        {
+            roll.x *= 2;
+        }
+        else
+        {
+            roll.x *= -2;
+        }
+
+
+        rb.AddForce(roll * rollDistance, ForceMode.Impulse);
+        yield return new WaitForSeconds(.2f);
+        canMove = true;
+        yield return new WaitForSeconds(1f);
+        playerHitDetect.isActive = true;
+    }
     IEnumerator Kick()
     {
+        currentstamina -= KickStaminaLoss;
         canMove = false;
         PlayerAnim.SetTrigger("Kick");
         yield return new WaitForSeconds(0.5f);
@@ -353,6 +436,9 @@ public class Player : Enemy
 
     public override void KillEnemy()
     {
+        rb.velocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+        //rb.AddForce(Vector3.zero, ForceMode.VelocityChange);
         gameManager.ResetPlayer();
         gameManager.RestartGame();
     }

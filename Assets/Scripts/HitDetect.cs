@@ -20,9 +20,8 @@ public class HitDetect : MonoBehaviour
     public bool isActive = true;
     public Vector3 force;
     public Enemy parent;
-    public Bomb bomb;
     public HitDetect overlapper;
-
+    public bool alwaysDoDamage =false;
     private bool overlapping;
 
     private void Start()
@@ -65,6 +64,18 @@ public class HitDetect : MonoBehaviour
         }
 
     }
+    public void AlwaysDoDamageToParent(int spDamage, Vector3 forcehit)
+    {
+        parent.TakeDamage(spDamage, forcehit);
+
+    }
+    public void DoDamageToParent(int spDamage)
+    {
+        if (isActive)
+        {
+            parent.TakeDamage(spDamage);
+        }
+    }
 
     public void DoDamageToParent(Vector3 forcehit)
     {
@@ -89,6 +100,10 @@ public class HitDetect : MonoBehaviour
         {
             if (layerToDetect.value == (layerToDetect.value | (1 << other.gameObject.layer)))
             {
+                if (name == "Checkpoint")
+                {
+                    int i = 0;
+                }
                 Vector3 forcehit = new Vector3();
                 if (other.transform.position.x > transform.position.x)
                 {
@@ -104,13 +119,21 @@ public class HitDetect : MonoBehaviour
                     forcehit.y = force.y;
                     forcehit.z = force.z;
                 }
-
+                //Debug.Log("Switch type = " + thisHitDetectType + "parent is " + parent.name);
                 switch (thisHitDetectType)
                 {
 
                     case HitDetectType.GivesDamage:
                         overlapper = other.gameObject.GetComponent<HitDetect>();
-                        overlapper.DoDamageToParent(damage,forcehit);
+                        if (alwaysDoDamage)
+                        {
+                            overlapper.AlwaysDoDamageToParent(damage, forcehit);
+
+                        }else
+                        {
+                            overlapper.DoDamageToParent(damage,forcehit);
+
+                        }
                         overlapping = true;
                         Debug.Log("hit " + damage + " " + other.gameObject.GetComponent<Enemy>().Health);
                         
@@ -121,6 +144,7 @@ public class HitDetect : MonoBehaviour
                         break;
                     case HitDetectType.AlertsEnemy:
                         parent.Alert();
+                        
 
                         break;
 

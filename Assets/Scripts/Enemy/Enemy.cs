@@ -6,6 +6,7 @@ public class Enemy : MonoBehaviour
 {
     protected Rigidbody rb;
     private bool takingDamage = false;
+    public int MaxHealth;
     protected int health;
     public int Health
     {
@@ -24,7 +25,8 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    
+
+
 
     public void TakeDamage(int damage)
     {
@@ -52,8 +54,8 @@ public class Enemy : MonoBehaviour
 
         if (!takingDamage)
         {
-            Health -= damage;
             rb.AddForce(knockback, ForceMode.Impulse);
+            Health -= damage;
             StopCoroutine(HitFlash());
             StartCoroutine(HitFlash());
         }        
@@ -79,5 +81,5 @@ public class Enemy : MonoBehaviour
     {
         Debug.Log("Enemy Forgotten");
     }
-
+   
 }
