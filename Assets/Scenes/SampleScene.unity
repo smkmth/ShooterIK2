@@ -280,6 +280,18 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 103235384}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &186089855 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5514269565956371537, guid: e34db5959dcca144e81abd5ee37b10b9,
+    type: 3}
+  m_PrefabInstance: {fileID: 2120379791}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4862ecc729ed85b4392a746e07731fa7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &234446557
 GameObject:
   m_ObjectHideFlags: 0
@@ -1394,8 +1406,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   MaxHealth: 30
-  stopDistance: 0
+  tooFarDistance: 0
   tooCloseDistance: 0
+  attackTime: 0
+  attackRecoverTime: 0
+  attackWindupTime: 0
+  leftAttack: {fileID: 0}
+  rightAttack: {fileID: 0}
+  playerIsRight: 0
+  attacking: 0
+  rightFudgeDistance: 0
+  leftFudgeDistance: 0
   ThrowTime: 2
   bombPrefab: {fileID: 2410975193947669988, guid: 570e8118f30a9ac41b84855ed3db2633,
     type: 3}
@@ -1772,8 +1793,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   MaxHealth: 30
-  stopDistance: 0
+  tooFarDistance: 0
   tooCloseDistance: 0
+  attackTime: 0
+  attackRecoverTime: 0
+  attackWindupTime: 0
+  leftAttack: {fileID: 0}
+  rightAttack: {fileID: 0}
+  playerIsRight: 0
+  attacking: 0
+  rightFudgeDistance: 0
+  leftFudgeDistance: 0
   ThrowTime: 1
   bombPrefab: {fileID: 2410975193947669988, guid: 570e8118f30a9ac41b84855ed3db2633,
     type: 3}
@@ -3306,6 +3336,36 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1671637788}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &1765803673 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5514269565220131015, guid: e34db5959dcca144e81abd5ee37b10b9,
+    type: 3}
+  m_PrefabInstance: {fileID: 2120379791}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1765803674
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1765803673}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ebf99a164a3e09439efb22616b39529, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MaxHealth: 100
+  tooFarDistance: 0.5
+  tooCloseDistance: 0.2
+  attackTime: 0.3
+  attackRecoverTime: 0.3
+  attackWindupTime: 0.3
+  leftAttack: {fileID: 186089855}
+  rightAttack: {fileID: 2046321212}
+  playerIsRight: 0
+  attacking: 0
+  rightFudgeDistance: 1
+  leftFudgeDistance: -1
 --- !u!1 &1806037026
 GameObject:
   m_ObjectHideFlags: 0
@@ -3579,6 +3639,18 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1998929063}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &2046321212 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5514269565071482263, guid: e34db5959dcca144e81abd5ee37b10b9,
+    type: 3}
+  m_PrefabInstance: {fileID: 2120379791}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4862ecc729ed85b4392a746e07731fa7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &2102893298
 GameObject:
   m_ObjectHideFlags: 0
@@ -3620,6 +3692,16 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Zombie
+      objectReference: {fileID: 0}
+    - target: {fileID: 5514269565220131018, guid: e34db5959dcca144e81abd5ee37b10b9,
+        type: 3}
+      propertyPath: stopDistance
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5514269565220131018, guid: e34db5959dcca144e81abd5ee37b10b9,
+        type: 3}
+      propertyPath: tooCloseDistance
+      value: 0.9
       objectReference: {fileID: 0}
     - target: {fileID: 5514269565220131019, guid: e34db5959dcca144e81abd5ee37b10b9,
         type: 3}
@@ -3686,27 +3768,38 @@ PrefabInstance:
       propertyPath: damage
       value: 10
       objectReference: {fileID: 0}
-    - target: {fileID: 5514269565956371537, guid: e34db5959dcca144e81abd5ee37b10b9,
+    - target: {fileID: 5514269565071482263, guid: e34db5959dcca144e81abd5ee37b10b9,
         type: 3}
-      propertyPath: damage
-      value: 10
-      objectReference: {fileID: 0}
-    - target: {fileID: 5514269565220131018, guid: e34db5959dcca144e81abd5ee37b10b9,
-        type: 3}
-      propertyPath: stopDistance
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5514269565220131018, guid: e34db5959dcca144e81abd5ee37b10b9,
-        type: 3}
-      propertyPath: tooCloseDistance
-      value: 0.9
+      propertyPath: isActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5514269565686612981, guid: e34db5959dcca144e81abd5ee37b10b9,
         type: 3}
       propertyPath: m_Radius
       value: 6
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 5514269565956371537, guid: e34db5959dcca144e81abd5ee37b10b9,
+        type: 3}
+      propertyPath: damage
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 5514269565956371537, guid: e34db5959dcca144e81abd5ee37b10b9,
+        type: 3}
+      propertyPath: isActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5514269565071482257, guid: e34db5959dcca144e81abd5ee37b10b9,
+        type: 3}
+      propertyPath: m_Name
+      value: RightAttack
+      objectReference: {fileID: 0}
+    - target: {fileID: 5514269565956371539, guid: e34db5959dcca144e81abd5ee37b10b9,
+        type: 3}
+      propertyPath: m_Name
+      value: LeftAttack
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 1287529239, guid: e34db5959dcca144e81abd5ee37b10b9, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: e34db5959dcca144e81abd5ee37b10b9, type: 3}
 --- !u!1001 &6493985646978729587
 PrefabInstance:

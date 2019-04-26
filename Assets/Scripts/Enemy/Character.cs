@@ -9,7 +9,7 @@ public class Character : MonoBehaviour
     protected HitDetect thisHitDetect;
     protected Player player;
 
-    private bool takingDamage = false;
+
     public int MaxHealth;
 
     protected bool seenPlayer;
@@ -32,6 +32,8 @@ public class Character : MonoBehaviour
             }
         }
     }
+    private bool takingDamage = false;
+
     public virtual void Start()
     {
         player = GameObject.Find("Player").GetComponent<Player>();

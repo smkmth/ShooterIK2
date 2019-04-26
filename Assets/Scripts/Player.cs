@@ -6,75 +6,93 @@ using UnityEngine;
 public class Player : Character
 {
 
-    public GameObject MainArmIK;
-    public GameObject gun;
     public Camera playerCam;
-
-
-
     public Animator PlayerAnim;
 
+    private DDOL gameManager;
+
+    public CapsuleCollider playerCollider;
+
+    private LayerMask Ground;
+    private LayerMask WeaponHit;
+
+    public UIManager uiManager;
+
+    private AudioSource playerAudioSource;
+
+    [Header("Movement")]
     public float BaseWalkSpeed;
     private float walkSpeed;
     public float BaseRunSpeed;
     private float runSpeed;
-    public float jumpHeight;
-    public float wallJumpHeight;
-    public float wallJumpWidth;
-    private Vector3 wallJumpVector;
-    public float airspeed;
     public float maxSpeed;
 
-    public float grounddrag;
-    public float airdrag;
-
-    public float fireDelay;
-    private float timer;
-
-    public bool touchingWall = false;
-    public bool onLedge = false;
-
-    public float rollDistance;
-    public int takenJumpActions =0;
-    public int MaxJumpActions;
-
-    private LayerMask Ground; 
-    private LayerMask WeaponHit;
-
-    public CapsuleCollider playerCollider;
-   // private Rigidbody rb;
-    private DDOL gameManager;
-
-    public GameObject particleO;
-    public GameObject playerShoulder;
-
-    public ParticleSystem gunParticle;
-    public ParticleSystem gunFlashParticle;
-    public Vector3 Knockback;
-    public AudioClip gunshot;
-    public UIManager uiManager;
-    AudioSource pAudioSource;
-
-   // [HideInInspector]
-    public bool Grounded;
-
-    public bool NearLedge;
-    [HideInInspector]
-    public bool facingRight = true;
-    [HideInInspector]
-    public bool walking = false;
+    private float inputLR;
 
     private Vector3 flip = new Vector3(-.1f, .1f, .1f);
     private Vector3 notflipped = new Vector3(.1f, .1f, .1f);
 
-   // public int MaxHealth;
+    [ReadOnly]
+    public bool Grounded;
+    [ReadOnly]
+    public bool NearLedge;
+    [ReadOnly]
+    public bool facingRight = true;
+    [ReadOnly]
+    public bool walking = false;
 
+    [Header("Jumping")]
+    public float jumpHeight;
+    public float jumpWidth;
+    public float airSpeed;
+    private int takenJumpActions =0;
+    public int MaxJumpActions;
+
+    [Header("Wall Jumping")]
+    public float wallJumpHeight;
+    public float wallJumpWidth;
+    private Vector3 wallJumpVector;
+    [ReadOnly]
+    public bool touchingWall = false;
+
+    [Header("Dodge")]
+    public float dodgeDistance;
+    public float airDodgeDistance;
+
+
+    [Header("Stamina")]
     public float currentstamina;
     public float MaxStamina;
     public float RollStaminaLoss;
     public float KickStaminaLoss;
     public float StaminaRegainRate;
     public float JumpStaminaLoss;
+
+    [Header("Gun")]
+    public float fireDelay;
+    private float fireTimer;
+    public int gunDamage;
+    public Vector3 gunKnockback;
+    public AudioClip gunshotAudio;
+
+    [Header("Kick")]
+    public int KickDamage;
+    public float KickTime;
+    public Vector3 KickVector;
+
+
+    [Header("Refs to Body Parts")]
+    public HitDetect Foot;
+    public GameObject MainArmIK;
+    public GameObject gun;
+    public GameObject playerShoulder;
+
+    public GameObject particleObject;
+    private ParticleSystem gunParticle;
+    private ParticleSystem gunFlashParticle;
+
+
+
 
 
     // Start is called before the first frame update
@@ -85,37 +103,38 @@ public class Player : Character
         playerCollider = GetComponent<CapsuleCollider>();
         gameManager = GetComponentInParent<DDOL>();
 
+        uiManager = gameManager.GetComponentInChildren<UIManager>();
+        currentstamina = MaxStamina;
+
 
         Ground = gameManager.whatIsGround;
         WeaponHit = gameManager.whatIsEnemy;
-        rb.drag = grounddrag;
 
 
-        pAudioSource= GetComponent<AudioSource>();
-        pAudioSource.clip = gunshot;
+        playerAudioSource= GetComponent<AudioSource>();
+        playerAudioSource.clip = gunshotAudio;
 
-        currentstamina = MaxStamina;
         gameManager.lastCheckpoint = transform.position;
 
+        gunParticle = particleObject.GetComponent<ParticleSystem>();
+        gunFlashParticle = particleObject.GetComponentInChildren<ParticleSystem>();
+
+
+        Foot.isActive = false;
+        Foot.force = KickVector;
+        Foot.damage = KickDamage;
     }
 
-    void OnDrawGizmosSelected()
-    {
-        // Draw a yellow sphere at the transform's position
-        Vector3 modbounds = new Vector3(playerCollider.bounds.center.x , playerCollider.bounds.min.y, playerCollider.bounds.center.z); 
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawSphere(modbounds, 0.03f);
-
-       // Gizmos.color = Color.blue;
-       // Gizmos.DrawSphere(transform.position, .2f);
-    }
 
     // Update is called once per frame
     void Update()
     {
+        inputLR = Input.GetAxis("Horizontal");
 
+        //grounded
         Vector3 modbounds = new Vector3(playerCollider.bounds.center.x , playerCollider.bounds.min.y, playerCollider.bounds.center.z); 
         Grounded = Physics.CheckSphere(modbounds, 0.03f, Ground);
+
         NearLedge = Physics.CheckSphere(transform.position, .2f ,LayerMask.NameToLayer("Corner"));
 
         if (Grounded)
@@ -126,8 +145,8 @@ public class Player : Character
         }
         else
         {
-            walkSpeed = airspeed;
-            runSpeed = airspeed;
+            walkSpeed = airSpeed;
+            runSpeed = airSpeed;
         }
         PlayerAnim.SetBool("Grounded", Grounded);
         walking = Input.GetButton("Run");
@@ -147,13 +166,14 @@ public class Player : Character
         Vector3 pos = playerCam.ScreenToWorldPoint(Input.mousePosition);
         pos.z = 0;
         MainArmIK.transform.position = pos;
-
         Vector3 dir = Input.mousePosition - playerCam.WorldToScreenPoint(gun.transform.position);
-      
-        if (timer <= 0.0f)
+
+        //shooting
+        if (fireTimer <= 0.0f)
         {
             if (Input.GetMouseButtonDown(0))
             {
+                //particles
                 if (facingRight)
                 {
       
@@ -162,21 +182,20 @@ public class Player : Character
         
                     Quaternion rot180degrees = Quaternion.Euler(rot);
                   
-                    particleO.transform.rotation = rot180degrees;
+                    particleObject.transform.rotation = rot180degrees;
                 }
                 else
                 {
-                    particleO.transform.rotation = playerShoulder.transform.rotation;
+                    particleObject.transform.rotation = playerShoulder.transform.rotation;
 
 
                 }
-                RaycastHit hit;
-              
                 gunParticle.Emit(1);
                 gunFlashParticle.Play();
-                pAudioSource.Play();
+                playerAudioSource.Play();
 
 
+                RaycastHit hit;
                 Physics.Raycast(gun.transform.position, dir * 1000.0f, out hit, 1000.0f, WeaponHit);
                 Debug.DrawRay(gun.transform.position, dir * 1000.0f, Color.yellow, 1.0f);
                 
@@ -184,34 +203,28 @@ public class Player : Character
                 {
                     if (hit.transform.gameObject.GetComponent<HitDetect>())
                     {
-             
                         if (hit.transform.position.x > transform.position.x)
                         {
-                            Knockback.x = Mathf.Abs(Knockback.x);
-                        
+                            gunKnockback.x = Mathf.Abs(gunKnockback.x);
                         }
                         else
                         {
-                            Knockback.x = Mathf.Abs(Knockback.x)* -1;
-
+                            gunKnockback.x = Mathf.Abs(gunKnockback.x)* -1;
                         }
-                    
-
-                        hit.transform.gameObject.GetComponent<HitDetect>().DoDamageToParent(10, Knockback);
+                        hit.transform.gameObject.GetComponent<HitDetect>().DoDamageToParent(gunDamage, gunKnockback);
                     }
                 }
-                timer = fireDelay;
-
+                fireTimer = fireDelay;
             }
         }
         else
         {
-            timer -= Time.deltaTime;
+            fireTimer -= Time.deltaTime;
         }
 
         if (canMove)
         {
-
+            //recover stamina over time
             if (currentstamina < MaxStamina)
             {
                 currentstamina += Time.deltaTime * StaminaRegainRate;
@@ -226,38 +239,41 @@ public class Player : Character
                     if (currentstamina > RollStaminaLoss)
                     {
                         takenJumpActions +=1;
-                        StopCoroutine(Roll());
-                        StartCoroutine(Roll());
+                        StopCoroutine(Dodge());
+                        StartCoroutine(Dodge());
                     }
                 }
             }
             //jumping
             if (Input.GetButtonDown("Jump"))
             {
+                //normal jump and double jump
                 if (Grounded || takenJumpActions <= (MaxJumpActions-1))
                 {
+                    //calculate stamina loss only on double jumps 
                     if(takenJumpActions != 0)
                     {
                         currentstamina -= JumpStaminaLoss;
 
                     }
                     takenJumpActions += 1;
-
+                    
+                    //if player is standing still, just jump up, else, add some distance to the jump
                     Vector3 jump = new Vector3(0, 1, 0);
-                    if (Input.GetAxis("Horizontal") != 0)
+                    if (inputLR != 0)
                     {
-                        if (facingRight)
+                        if (inputLR > 0)
                         {
 
-                            jump.x *= 2;
+                            jump.x *= jumpWidth;
                         }
                         else
                         {
-                            jump.x *= -2;
+                            jump.x *= -jumpWidth;
                         }
 
                     }
-                    rb.AddForce(jump * jumpHeight, ForceMode.Impulse);
+                    rb.AddForce(jump * jumpHeight, ForceMode.VelocityChange);
                 }
 
             }
@@ -270,67 +286,92 @@ public class Player : Character
                     StartCoroutine(Kick());
                 }
             }
-            //walljump
+
+            //walljump - get walljump vector from normal of collision with wall
+            //on on collisionenter below
             if (Input.GetButtonDown("Jump") && touchingWall && !Grounded)
             {
-                if (!onLedge)
+
+                Debug.Log("Wall Jump");
+                wallJumpVector.Normalize();
+                wallJumpVector.y += wallJumpHeight;
+                if (wallJumpVector.x > 0)
                 {
-                    Debug.Log("Wall Jump");
-                    wallJumpVector.Normalize();
-                    wallJumpVector.y += wallJumpHeight;
-                    if (wallJumpVector.x > 0)
-                    {
-                        wallJumpVector.x += wallJumpWidth;
+                    wallJumpVector.x += wallJumpWidth;
 
-                    }else
-                    {
-                        wallJumpVector.x -= wallJumpWidth;
-
-                    }
-                    Debug.Log(wallJumpVector * wallJumpHeight);
-
-                    rb.AddForce(wallJumpVector * wallJumpHeight, ForceMode.Impulse);
-                    PlayerAnim.SetTrigger("WallJump");
                 }
                 else
                 {
-                    Debug.Log("Ledge Catch");
-                    rb.AddForce(new Vector3(0.0f, 6.0f, 0), ForceMode.Impulse);
+                    wallJumpVector.x -= wallJumpWidth;
 
                 }
+                //Debug.Log(wallJumpVector * wallJumpHeight);
+
+                rb.AddForce(wallJumpVector * wallJumpHeight, ForceMode.Impulse);
+                PlayerAnim.SetTrigger("WallJump");
+
+
             }
         }
     }
+    //these coroutines are for anything which needs a specfic timer, like
+    //dodging or kicking. 
 
-    IEnumerator Roll()
+
+    IEnumerator Dodge()
     {
         thisHitDetect.isActive = false;
         canMove = false;
         currentstamina -= RollStaminaLoss;
         PlayerAnim.SetTrigger("Roll");
-        Debug.Log("Roll");
-        Vector3 roll = new Vector3(1, 0, 0);
-        if (facingRight)
+        Vector3 dodge = new Vector3(1, 0, 0);
+        //respect keyboard movement first, else use facing direction second.
+        if (inputLR > 0)
         {
-            roll.x *= 2;
+            dodge.x *= 2;
+        }
+        else if (inputLR < 0)
+        {
+            dodge.x *= -2;
         }
         else
         {
-            roll.x *= -2;
-        }
+            if (facingRight)
+            {
+                dodge.x *= 2;
 
-        rb.AddForce(roll * rollDistance, ForceMode.Impulse);
+            }
+            else
+            {
+                dodge.x *= -2;
+
+            }
+        }
+        if (Grounded)
+        {
+            rb.AddForce(dodge * dodgeDistance, ForceMode.Impulse);
+        }
+        else
+        {
+            rb.AddForce(dodge * airDodgeDistance, ForceMode.Impulse);
+
+
+        }
         yield return new WaitForSeconds(.2f);
         canMove = true;
         yield return new WaitForSeconds(1f);
         thisHitDetect.isActive = true;
     }
+
+
     IEnumerator Kick()
     {
         currentstamina -= KickStaminaLoss;
+        Foot.isActive = true;
         canMove = false;
         PlayerAnim.SetTrigger("Kick");
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(KickTime);
+        Foot.isActive = false;
         canMove = true;
     }
 
@@ -338,29 +379,12 @@ public class Player : Character
 
     private void FixedUpdate()
     {
-
-
         //movement 
-        float inputLR = Input.GetAxis("Horizontal");
         if (canMove)
         {
-
             if (inputLR != 0)
             {
-                if (walking)
-                {
-
-                    PlayerAnim.SetBool("Walking", true);
-                    PlayerAnim.SetBool("Running", false);
-                    if (rb.velocity.magnitude < maxSpeed)
-                    {
-                        rb.AddForce(Vector3.right * inputLR * Time.deltaTime * walkSpeed, ForceMode.Impulse);
-                    }
-
-                }
-                else
-                {
-                    PlayerAnim.SetBool("Walking", false);
+                { 
                     PlayerAnim.SetBool("Running", true);
                     if (rb.velocity.magnitude < maxSpeed)
                     {
@@ -372,7 +396,6 @@ public class Player : Character
             else
             {
                 PlayerAnim.SetBool("Running", false);
-                PlayerAnim.SetBool("Walking", false);
 
             }
         }
@@ -397,29 +420,9 @@ public class Player : Character
     private void OnCollisionExit(Collision collision)
     {
         touchingWall = false;
-
-
     }
 
-    public void OffArmColliderHit(Collider hit)
-    {
-      
-        Debug.Log(hit.gameObject.name + "Hit");
-        rb.useGravity = false;
-        onLedge = true;
-
-
-    }
-    public void OffArmColliderExit(Collider hit)
-    {
-        if (onLedge)
-        {
-            onLedge = false;
-            rb.useGravity = true;
-
-        }
-
-    }
+ 
 
     public void SetNewCheckpoint(Vector3 checkpoint)
     {
@@ -437,4 +440,17 @@ public class Player : Character
         gameManager.ResetPlayer();
         gameManager.RestartGame();
     }
+
+    /*
+    void OnDrawGizmosSelected()
+    {
+        // Draw a yellow sphere at the transform's position
+        Vector3 modbounds = new Vector3(playerCollider.bounds.center.x , playerCollider.bounds.min.y, playerCollider.bounds.center.z); 
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawSphere(modbounds, 0.03f);
+
+       // Gizmos.color = Color.blue;
+       // Gizmos.DrawSphere(transform.position, .2f);
+    }
+    */
 }

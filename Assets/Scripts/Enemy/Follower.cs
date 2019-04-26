@@ -5,9 +5,17 @@ using UnityEngine;
 public class Follower : Character
 {
     
-    public float stopDistance;
+    public float tooFarDistance;
     public float tooCloseDistance;
-        
+    public float attackTime;
+    public float attackRecoverTime;
+    public float attackWindupTime;
+    public HitDetect leftAttack;
+    public HitDetect rightAttack;
+    public bool playerIsRight;
+    public bool attacking;
+    public float rightFudgeDistance;
+    public float leftFudgeDistance;
     // Update is called once per frame
     public virtual void Update()
     {
@@ -15,31 +23,78 @@ public class Follower : Character
         {
             if (canMove)
             {
-                if (player.transform.position.x > (transform.position.x + stopDistance))
+                float dist = Vector3.Distance(transform.position, player.transform.position);
+                playerIsRight = (player.transform.position.x > transform.position.x);
+                if (dist > tooFarDistance)
                 {
-                    transform.position += Vector3.right * Time.deltaTime;
+                    if (playerIsRight)
+                    {
+                        transform.position += Vector3.right * Time.deltaTime;
+
+                    }
+                    else
+                    {
+                        transform.position += -Vector3.right * Time.deltaTime;
+
+                    }
+
 
                 }
-                else if (player.transform.position.x < (transform.position.x - stopDistance))
+                else if (dist < tooCloseDistance)
                 {
-                    transform.position += -Vector3.right * Time.deltaTime;
+                    if (playerIsRight)
+                    {
+                        transform.position += -Vector3.right * Time.deltaTime;
+
+                    }
+                    else
+                    {
+                        transform.position += Vector3.right * Time.deltaTime;
+
+                    }
 
 
                 }
-                else if (player.transform.position.x > (transform.position.x + tooCloseDistance))
+                else
                 {
-                    Debug.Log("To Close! LEFT");
-                    transform.position += -Vector3.right * Time.deltaTime;
+                    Debug.Log("good");
+                    if (!attacking)
+                    {
+                        StopCoroutine(Attack());
+                        StartCoroutine(Attack());
 
-                }
-                else if (player.transform.position.x < (transform.position.x - tooCloseDistance))
-                {
-                    Debug.Log("To Close! RIGHT");
-                    transform.position += Vector3.right * Time.deltaTime;
-
+                    }
                 }
             }
         }
+
+
+    }
+
+    public IEnumerator Attack()
+    {
+        attacking = true;
+        canMove = false;
+        Debug.Log("Started attack");
+        yield return new WaitForSeconds(attackWindupTime);
+        Debug.Log("attacking");
+
+        if (playerIsRight)
+        {
+            rightAttack.isActive = true;
+        }
+        else
+        {
+            leftAttack.isActive = true;
+        }
+        yield return new WaitForSeconds(attackTime);
+        Debug.Log("finished attacking");
+        leftAttack.isActive = false;
+        rightAttack.isActive = false;
+        yield return new WaitForSeconds(attackRecoverTime);
+        Debug.Log("return to moving");
+        canMove = true;
+        attacking = false;
 
 
     }

@@ -21,7 +21,7 @@ public class HitDetect : MonoBehaviour
     public Vector3 force;
     public Character parent;
     public HitDetect overlapper;
-    public bool alwaysDoDamage =false;
+    public bool alwaysDoDamage = false;
     private bool overlapping;
 
     private void Start()
@@ -31,16 +31,16 @@ public class HitDetect : MonoBehaviour
 
             case HitDetectType.GivesDamage:
 
-                //fallthrough
+            //fallthrough
             case HitDetectType.TakesDamage:
 
-                
-                //fallthrough
-            case HitDetectType.AlertsEnemy:
-                
 
-                //fallthrough
-                
+            //fallthrough
+            case HitDetectType.AlertsEnemy:
+
+
+            //fallthrough
+
 
             case HitDetectType.ForgetEnemy:
                 //fallthrough
@@ -55,7 +55,7 @@ public class HitDetect : MonoBehaviour
             case HitDetectType.SetCheckpoint:
                 break;
 
-          
+
 
             default:
                 break;
@@ -96,173 +96,173 @@ public class HitDetect : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (isActive)
+        if (layerToDetect.value == (layerToDetect.value | (1 << other.gameObject.layer)))
         {
-            if (layerToDetect.value == (layerToDetect.value | (1 << other.gameObject.layer)))
+
+            Vector3 forcehit = new Vector3();
+            if (other.transform.position.x > transform.position.x)
             {
-                if (name == "Checkpoint")
-                {
-                    int i = 0;
-                }
-                Vector3 forcehit = new Vector3();
-                if (other.transform.position.x > transform.position.x)
-                {
-                    forcehit.x = force.x;
-                    forcehit.y = force.y;
-                    forcehit.z = force.z;
+                forcehit.x = force.x;
+                forcehit.y = force.y;
+                forcehit.z = force.z;
 
-                }
-                else
-                {
+            }
+            else
+            {
 
-                    forcehit.x = -force.x;
-                    forcehit.y = force.y;
-                    forcehit.z = force.z;
-                }
-                //Debug.Log("Switch type = " + thisHitDetectType + "parent is " + parent.name);
-                switch (thisHitDetectType)
-                {
+                forcehit.x = -force.x;
+                forcehit.y = force.y;
+                forcehit.z = force.z;
+            }
+            //Debug.Log("Switch type = " + thisHitDetectType + "parent is " + parent.name);
+            switch (thisHitDetectType)
+            {
 
-                    case HitDetectType.GivesDamage:
-                        overlapper = other.gameObject.GetComponent<HitDetect>();
-                        if (alwaysDoDamage)
+                case HitDetectType.GivesDamage:
+                    overlapper = other.gameObject.GetComponent<HitDetect>();
+                    if (alwaysDoDamage)
+                    {
+
+                        overlapper.AlwaysDoDamageToParent(damage, forcehit);
+
+                    }
+                    else
+                    {
+                        if (isActive)
                         {
-                            overlapper.AlwaysDoDamageToParent(damage, forcehit);
-
-                        }else
-                        {
-                            overlapper.DoDamageToParent(damage,forcehit);
-
+                            overlapper.DoDamageToParent(damage, forcehit);
                         }
-                        overlapping = true;
-                        Debug.Log("hit " + damage + " " + other.gameObject.GetComponent<Character>().Health);
-                        
-                        break;
+                    }
+                    overlapping = true;
+                    Debug.Log("hit " + damage + " " + other.gameObject.GetComponent<Character>().Health);
 
-                    case HitDetectType.TakesDamage:
-                        
-                        break;
-                    case HitDetectType.AlertsEnemy:
-                        parent.Alert();
-                        
+                    break;
 
-                        break;
+                case HitDetectType.TakesDamage:
 
-                    case HitDetectType.ForgetEnemy:
-                        break;
+                    break;
+                case HitDetectType.AlertsEnemy:
+                    parent.Alert();
 
 
-                    case HitDetectType.SetCheckpoint:
+                    break;
 
-                        other.gameObject.GetComponent<Player>().SetNewCheckpoint(transform.position);
-                        break;
-
-            
-
-                    default:
-                        break;
+                case HitDetectType.ForgetEnemy:
+                    break;
 
 
-                }
+                case HitDetectType.SetCheckpoint:
+
+                    other.gameObject.GetComponent<Player>().SetNewCheckpoint(transform.position);
+                    break;
+
+
+
+                default:
+                    break;
 
 
             }
+
+
         }
+
     }
 
     private void Update()
     {
         if (overlapping)
         {
-            if (isActive)
+
+
+            Vector3 forcehit = new Vector3();
+            if (overlapper.transform.position.x > transform.position.x)
+            {
+                forcehit.x = force.x;
+                forcehit.y = force.y;
+                forcehit.z = force.z;
+
+            }
+            else
             {
 
-                Vector3 forcehit = new Vector3();
-                if (overlapper.transform.position.x > transform.position.x)
-                {
-                    forcehit.x = force.x;
-                    forcehit.y = force.y;
-                    forcehit.z = force.z;
+                forcehit.x = -force.x;
+                forcehit.y = force.y;
+                forcehit.z = force.z;
+            }
+            switch (thisHitDetectType)
+            {
 
-                }
-                else
-                {
-
-                    forcehit.x = -force.x;
-                    forcehit.y = force.y;
-                    forcehit.z = force.z;
-                }
-                switch (thisHitDetectType)
-                {
-
-                    case HitDetectType.GivesDamage:
+                case HitDetectType.GivesDamage:
+                    if (isActive)
+                    {
                         overlapper.gameObject.GetComponent<HitDetect>().DoDamageToParent(damage, forcehit);
-                        break;
+                    }
+                    break;
 
-                    case HitDetectType.TakesDamage:
+                case HitDetectType.TakesDamage:
 
-                        break;
-                    case HitDetectType.AlertsEnemy:
-                        parent.Alert();
+                    break;
+                case HitDetectType.AlertsEnemy:
+                    parent.Alert();
 
-                        break;
+                    break;
 
-                    case HitDetectType.ForgetEnemy:
-                        parent.Forget();
-                        break;
+                case HitDetectType.ForgetEnemy:
+                    parent.Forget();
+                    break;
 
-                    case HitDetectType.SetCheckpoint:
-                        break;
+                case HitDetectType.SetCheckpoint:
+                    break;
 
-           
 
-                    default:
-                        break;
 
-                }
+                default:
+                    break;
 
             }
 
         }
+
+
     }
 
     private void OnTriggerExit(Collider other)
     {
-        if (isActive)
+
+        if (layerToDetect.value == (layerToDetect.value | (1 << other.gameObject.layer)))
         {
-            if (layerToDetect.value == (layerToDetect.value | (1 << other.gameObject.layer)))
+
+            switch (thisHitDetectType)
             {
 
-                switch (thisHitDetectType)
-                {
+                case HitDetectType.GivesDamage:
+                    overlapping = false;
+                    overlapper = null;
+                    break;
 
-                    case HitDetectType.GivesDamage:
-                        overlapping = false;
-                        overlapper = null;
-                        break;
+                case HitDetectType.TakesDamage:
 
-                    case HitDetectType.TakesDamage:
+                    break;
+                case HitDetectType.AlertsEnemy:
+                    parent.Alert();
 
-                        break;
-                    case HitDetectType.AlertsEnemy:
-                        parent.Alert();
+                    break;
 
-                        break;
+                case HitDetectType.ForgetEnemy:
+                    parent.Forget();
+                    break;
 
-                    case HitDetectType.ForgetEnemy:
-                        parent.Forget();
-                        break;
+                case HitDetectType.SetCheckpoint:
+                    break;
 
-                    case HitDetectType.SetCheckpoint:
-                        break;
-                  
-                    default:
-                        break;
+                default:
+                    break;
 
 
-                }
             }
         }
+
 
     }
 }
