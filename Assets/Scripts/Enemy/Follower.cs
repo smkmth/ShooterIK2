@@ -57,17 +57,24 @@ public class Follower : Character
                 }
                 else
                 {
-                    Debug.Log("good");
-                    if (!attacking)
-                    {
-                        StopCoroutine(Attack());
-                        StartCoroutine(Attack());
 
-                    }
+                    StartAttack();
                 }
             }
         }
 
+
+    }
+
+    public virtual void StartAttack()
+    {
+        Debug.Log("good");
+        if (!attacking)
+        {
+            StopCoroutine(Attack());
+            StartCoroutine(Attack());
+
+        }
 
     }
 
