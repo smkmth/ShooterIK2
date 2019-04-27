@@ -2,83 +2,64 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Follower : Character
+public class Follower : Enemey
 {
     
     public float tooFarDistance;
     public float tooCloseDistance;
-    public float attackTime;
-    public float attackRecoverTime;
-    public float attackWindupTime;
-    public HitDetect leftAttack;
-    public HitDetect rightAttack;
-    public bool playerIsRight;
-    public bool attacking;
-    public float rightFudgeDistance;
-    public float leftFudgeDistance;
+
+
+    // Start is called before the first frame update
+    public override void Start()
+    {
+        base.Start();
+        
+    }
+
     // Update is called once per frame
-    public virtual void Update()
+    public override void Update()
     {
-        if (seenPlayer)
+        base.Update();
+
+        if (dist > tooFarDistance)
         {
-            if (canMove)
+            if (playerIsRight)
             {
-                float dist = Vector3.Distance(transform.position, player.transform.position);
-                playerIsRight = (player.transform.position.x > transform.position.x);
-                if (dist > tooFarDistance)
-                {
-                    if (playerIsRight)
-                    {
-                        transform.position += Vector3.right * Time.deltaTime;
+                transform.position += Vector3.right * Time.deltaTime;
 
-                    }
-                    else
-                    {
-                        transform.position += -Vector3.right * Time.deltaTime;
-
-                    }
-
-
-                }
-                else if (dist < tooCloseDistance)
-                {
-                    if (playerIsRight)
-                    {
-                        transform.position += -Vector3.right * Time.deltaTime;
-
-                    }
-                    else
-                    {
-                        transform.position += Vector3.right * Time.deltaTime;
-
-                    }
-
-
-                }
-                else
-                {
-
-                    StartAttack();
-                }
             }
+            else
+            {
+                transform.position += -Vector3.right * Time.deltaTime;
+
+            }
+
+
         }
-
-
-    }
-
-    public virtual void StartAttack()
-    {
-        Debug.Log("good");
-        if (!attacking)
+        else if (dist < tooCloseDistance)
         {
-            StopCoroutine(Attack());
-            StartCoroutine(Attack());
+            if (playerIsRight)
+            {
+                transform.position += -Vector3.right * Time.deltaTime;
 
+            }
+            else
+            {
+                transform.position += Vector3.right * Time.deltaTime;
+
+            }
+
+
+        }
+        else
+        {
+
+            StartAttack();
         }
 
     }
 
-    public IEnumerator Attack()
+    public override IEnumerator Attack()
     {
         attacking = true;
         canMove = false;
@@ -105,37 +86,4 @@ public class Follower : Character
 
 
     }
-    public override void Alert()
-    {
-        base.Alert();
-        seenPlayer = true;
-
-
-
-    }
-    public override void Forget()
-    {
-        base.Forget();
-        seenPlayer = false;
-
-    }
-
-
-    public override void TakeDamage(int damage)
-    {
-        base.TakeDamage(damage);
-        seenPlayer = true;
-
-    }
-
-    public override void TakeDamage(int damage, Vector3 knockback)
-    {
-        base.TakeDamage(damage, knockback);
-        seenPlayer = true;
-    }
-
-
-
-
-
 }

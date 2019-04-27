@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Bouncer : Follower
+public class Bouncer : Enemey
 {
     private float timer;
     public float JumpTimer;

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Statue : Follower
+public class Statue : Enemey
 {
     public override void Start()
     {

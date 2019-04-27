@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BombGuy : Follower
+public class BombGuy : Enemey
 {
     public float ThrowTime;
     float timer;
