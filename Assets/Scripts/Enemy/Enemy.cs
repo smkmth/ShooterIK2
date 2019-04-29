@@ -55,9 +55,6 @@ public class Enemey : Character
     {
         base.Alert();
         seenPlayer = true;
-
-
-
     }
     public override void Forget()
     {
